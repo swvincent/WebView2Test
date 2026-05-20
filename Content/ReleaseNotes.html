@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Releases · acme/dataforge</title>
+<style>
+  /* ── CSS custom properties (light defaults) ── */
+  :root {
+    --bg-page:        #f6f8fa;
+    --bg-card:        #ffffff;
+    --bg-header:      #ffffff;
+    --border:         #d0d7de;
+    --text-primary:   #1f2328;
+    --text-secondary: #656d76;
+    --text-muted:     #9198a1;
+    --link:           #0969da;
+    --badge-new-bg:   #dafbe1;
+    --badge-new-text: #116329;
+    --badge-fix-bg:   #ddf4ff;
+    --badge-fix-text: #0550ae;
+    --badge-break-bg: #ffebe9;
+    --badge-break-text: #a40e26;
+    --tag-bg:         #eef1f4;
+    --tag-text:       #1f2328;
+    --tag-border:     #d0d7de;
+    --dot-line:       #d0d7de;
+    --dot-color:      #6e7781;
+    --scrollbar-thumb: #d0d7de;
+    --pre-bg:         #f6f8fa;
+    --pre-border:     #d0d7de;
+  }
+
+  /* Dark theme — injected class from C# */
+  :root.dark {
+    --bg-page:        #0d1117;
+    --bg-card:        #161b22;
+    --bg-header:      #161b22;
+    --border:         #30363d;
+    --text-primary:   #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted:     #6e7781;
+    --link:           #58a6ff;
+    --badge-new-bg:   #033a16;
+    --badge-new-text: #3fb950;
+    --badge-fix-bg:   #051d4d;
+    --badge-fix-text: #79c0ff;
+    --badge-break-bg: #300d0d;
+    --badge-break-text: #ff7b72;
+    --tag-bg:         #21262d;
+    --tag-text:       #e6edf3;
+    --tag-border:     #30363d;
+    --dot-line:       #30363d;
+    --dot-color:      #8b949e;
+    --scrollbar-thumb: #30363d;
+    --pre-bg:         #161b22;
+    --pre-border:     #30363d;
+  }
+
+  /* OS dark mode for initial load before C# injects a class */
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light):not(.dark) {
+      --bg-page:        #0d1117;
+      --bg-card:        #161b22;
+      --bg-header:      #161b22;
+      --border:         #30363d;
+      --text-primary:   #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted:     #6e7781;
+      --link:           #58a6ff;
+      --badge-new-bg:   #033a16;
+      --badge-new-text: #3fb950;
+      --badge-fix-bg:   #051d4d;
+      --badge-fix-text: #79c0ff;
+      --badge-break-bg: #300d0d;
+      --badge-break-text: #ff7b72;
+      --tag-bg:         #21262d;
+      --tag-text:       #e6edf3;
+      --tag-border:     #30363d;
+      --dot-line:       #30363d;
+      --dot-color:      #8b949e;
+      --scrollbar-thumb: #30363d;
+      --pre-bg:         #161b22;
+      --pre-border:     #30363d;
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    background: var(--bg-page);
+    transition: background 0.15s, color 0.15s;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+
+  body { max-width: 900px; margin: 0 auto; padding: 24px 16px 64px; }
+
+  /* ── Repo header ── */
+  .repo-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .repo-icon { font-size: 20px; color: var(--text-secondary); }
+  .repo-path { font-size: 20px; }
+  .repo-path a { color: var(--link); text-decoration: none; font-weight: 600; }
+  .repo-path a:hover { text-decoration: underline; }
+  .repo-path .sep { color: var(--text-secondary); margin: 0 4px; font-weight: 300; }
+  .repo-badge {
+    font-size: 11px;
+    padding: 2px 7px;
+    border: 1px solid var(--border);
+    border-radius: 2em;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  /* ── Page title ── */
+  .page-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: var(--text-primary);
+  }
+
+  /* ── Release timeline ── */
+  .releases { position: relative; }
+
+  .release {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 0 24px;
+    margin-bottom: 40px;
+    position: relative;
+  }
+
+  /* Vertical timeline line */
+  .release::before {
+    content: '';
+    position: absolute;
+    left: 199px;
+    top: 28px;
+    bottom: -40px;
+    width: 2px;
+    background: var(--dot-line);
+    z-index: 0;
+  }
+  .release:last-child::before { display: none; }
+
+  /* Timeline dot */
+  .release-meta::after {
+    content: '';
+    position: absolute;
+    left: 192px;
+    top: 20px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--bg-page);
+    border: 2px solid var(--dot-color);
+    z-index: 1;
+  }
+
+  .release-meta {
+    position: relative;
+    text-align: right;
+    padding-right: 32px;
+    padding-top: 2px;
+  }
+
+  .release-date {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .release-tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border: 1px solid var(--tag-border);
+    border-radius: 6px;
+    color: var(--tag-text);
+    background: var(--tag-bg);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .release-tag:hover { border-color: var(--link); color: var(--link); }
+
+  .release-tag.latest {
+    border-color: var(--badge-new-text);
+    color: var(--badge-new-text);
+    background: var(--badge-new-bg);
+  }
+
+  /* ── Release card ── */
+  .release-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px 20px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .release-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .release-title a { color: var(--text-primary); text-decoration: none; }
+  .release-title a:hover { color: var(--link); }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 2em;
+    vertical-align: middle;
+  }
+  .badge-new   { background: var(--badge-new-bg);   color: var(--badge-new-text); }
+  .badge-fix   { background: var(--badge-fix-bg);   color: var(--badge-fix-text); }
+  .badge-break { background: var(--badge-break-bg); color: var(--badge-break-text); }
+
+  .release-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+  .release-subtitle a { color: var(--link); text-decoration: none; }
+  .release-subtitle a:hover { text-decoration: underline; }
+
+  .release-body h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 16px 0 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+  }
+
+  .release-body ul {
+    padding-left: 20px;
+    margin-bottom: 4px;
+  }
+
+  .release-body li {
+    margin-bottom: 4px;
+    color: var(--text-primary);
+  }
+
+  .release-body li .mention {
+    color: var(--link);
+    font-weight: 500;
+  }
+
+  .release-body pre {
+    background: var(--pre-bg);
+    border: 1px solid var(--pre-border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-family: "Cascadia Code", "Fira Code", Consolas, "Courier New", monospace;
+    font-size: 12px;
+    overflow-x: auto;
+    color: var(--text-primary);
+    margin: 8px 0;
+  }
+
+  .release-body code {
+    font-family: "Cascadia Code", "Fira Code", Consolas, "Courier New", monospace;
+    font-size: 12px;
+    background: var(--pre-bg);
+    border: 1px solid var(--pre-border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    color: var(--text-primary);
+  }
+
+  .full-changelog {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .full-changelog a { color: var(--link); text-decoration: none; }
+  .full-changelog a:hover { text-decoration: underline; }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .release { grid-template-columns: 1fr; }
+    .release-meta { text-align: left; padding-right: 0; margin-bottom: 12px; }
+    .release::before { display: none; }
+    .release-meta::after { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="repo-header">
+  <span class="repo-icon">📦</span>
+  <div class="repo-path">
+    <a href="#">acme</a><span class="sep">/</span><a href="#">dataforge</a>
+  </div>
+  <span class="repo-badge">Public</span>
+</div>
+
+<h1 class="page-title">Releases</h1>
+
+<div class="releases">
+
+  <!-- ── v3.2.0 ── -->
+  <div class="release">
+    <div class="release-meta">
+      <span class="release-date">May 14, 2026</span>
+      <a class="release-tag latest" href="#">v3.2.0</a>
+    </div>
+    <div class="release-card">
+      <div class="release-title">
+        <a href="#">DataForge 3.2 — Streaming Pipelines</a>
+        <span class="badge badge-new">Latest</span>
+      </div>
+      <div class="release-subtitle">
+        <a href="#">@mcarvalho</a> released this · Compare:
+        <a href="#">v3.1.1...v3.2.0</a>
+      </div>
+      <div class="release-body">
+        <h3>🚀 What's New</h3>
+        <ul>
+          <li>Added <strong>streaming pipeline support</strong> — process records without buffering entire datasets in memory (<span class="mention">@mcarvalho</span>)</li>
+          <li>New <code>Pipeline.FromStream&lt;T&gt;()</code> factory method with built-in backpressure handling</li>
+          <li>Introduced <strong>parallel fan-out stages</strong> via <code>pipeline.FanOut(n)</code> for CPU-bound transformations (<span class="mention">@jsullivan</span>)</li>
+          <li>Added <code>IAsyncEnumerable&lt;T&gt;</code> source and sink adapters</li>
+          <li>New <code>DataForge.Metrics</code> package exposing OpenTelemetry counters for pipeline throughput and latency</li>
+          <li>JSON source now supports <strong>JSON Lines</strong> (NDJSON) format in addition to arrays (<span class="mention">@priya_k</span>)</li>
+        </ul>
+
+        <h3>🐛 Bug Fixes</h3>
+        <ul>
+          <li>Fixed a race condition in <code>BatchStage</code> that could drop the final partial batch on pipeline completion (<span class="mention">@jsullivan</span>)</li>
+          <li>Resolved <code>ObjectDisposedException</code> when cancelling a pipeline mid-flush</li>
+          <li>Fixed CSV parser mishandling quoted fields that span multiple lines</li>
+          <li>Corrected <code>DateTimeOffset</code> timezone preservation when writing Parquet output (<span class="mention">@alin_d</span>)</li>
+        </ul>
+
+        <h3>⚡ Performance</h3>
+        <ul>
+          <li>Reduced allocation pressure in the hot path by ~40% via <code>ArrayPool&lt;T&gt;</code> in sort stages</li>
+          <li>Parquet writer throughput improved by 25% on .NET 10 through vectorized column encoding</li>
+        </ul>
+
+        <pre>// New streaming usage
+await Pipeline
+    .FromStream&lt;Order&gt;(sourceStream)
+    .Filter(o =&gt; o.Total &gt; 100m)
+    .FanOut(4, stage =&gt; stage.Transform(Enrich))
+    .WriteTo(sink)
+    .RunAsync(cancellationToken);</pre>
+
+        <div class="full-changelog">
+          <strong>Full Changelog:</strong> <a href="#">v3.1.1...v3.2.0</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── v3.1.1 ── -->
+  <div class="release">
+    <div class="release-meta">
+      <span class="release-date">Apr 29, 2026</span>
+      <a class="release-tag" href="#">v3.1.1</a>
+    </div>
+    <div class="release-card">
+      <div class="release-title">
+        <a href="#">DataForge 3.1.1 — Patch Release</a>
+        <span class="badge badge-fix">Patch</span>
+      </div>
+      <div class="release-subtitle">
+        <a href="#">@jsullivan</a> released this · Compare:
+        <a href="#">v3.1.0...v3.1.1</a>
+      </div>
+      <div class="release-body">
+        <h3>🐛 Bug Fixes</h3>
+        <ul>
+          <li>Fixed <code>NullReferenceException</code> in <code>SchemaInferrer</code> when processing empty CSV files (<span class="mention">@jsullivan</span>)</li>
+          <li>Corrected memory leak in <code>ExcelSource</code> when workbooks contained merged cells and the pipeline was disposed before completion</li>
+          <li>Fixed incorrect row count reported by <code>PipelineResult.RecordsWritten</code> when the pipeline includes a <code>Distinct</code> stage (<span class="mention">@priya_k</span>)</li>
+          <li>Restored <code>CultureInfo</code> propagation to nested pipeline stages — was reset to invariant culture after first <code>GroupBy</code></li>
+        </ul>
+
+        <h3>📦 Dependencies</h3>
+        <ul>
+          <li>Updated <code>System.Text.Json</code> to 9.0.5 (security advisory <a href="#">GHSA-xxxx-yyyy-zzzz</a>)</li>
+          <li>Pinned <code>Apache.Arrow</code> to 16.1.0 to avoid a breaking API change in 17.x</li>
+        </ul>
+
+        <div class="full-changelog">
+          <strong>Full Changelog:</strong> <a href="#">v3.1.0...v3.1.1</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── v3.1.0 ── -->
+  <div class="release">
+    <div class="release-meta">
+      <span class="release-date">Apr 3, 2026</span>
+      <a class="release-tag" href="#">v3.1.0</a>
+    </div>
+    <div class="release-card">
+      <div class="release-title">
+        <a href="#">DataForge 3.1 — Schema Evolution &amp; Excel Support</a>
+        <span class="badge badge-new">Feature</span>
+        <span class="badge badge-break">Breaking</span>
+      </div>
+      <div class="release-subtitle">
+        <a href="#">@mcarvalho</a> released this · Compare:
+        <a href="#">v3.0.2...v3.1.0</a>
+      </div>
+      <div class="release-body">
+        <h3>🚀 What's New</h3>
+        <ul>
+          <li>Added <strong>schema evolution</strong> support — pipelines can now handle source columns being added, removed, or reordered without failing (<span class="mention">@mcarvalho</span>)</li>
+          <li>New <strong>Excel source</strong> (<code>ExcelSource</code>) supporting <code>.xlsx</code> and <code>.xls</code> via a built-in reader — no Office interop required (<span class="mention">@alin_d</span>)</li>
+          <li>Introduced <code>pipeline.Checkpoint(path)</code> for fault-tolerant pipelines — resumes from last committed offset on restart</li>
+          <li>Added <code>LookupJoin</code> stage for enriching records from an in-memory dictionary with O(1) lookups</li>
+          <li>New <code>DataForge.Testing</code> package with <code>FakeSource&lt;T&gt;</code> and assertion helpers for unit-testing pipeline logic (<span class="mention">@jsullivan</span>)</li>
+        </ul>
+
+        <h3>💥 Breaking Changes</h3>
+        <ul>
+          <li><code>IStage&lt;TIn, TOut&gt;</code> now requires implementing <code>ValueTask ProcessAsync</code> instead of <code>Task ProcessAsync</code> — update custom stages accordingly</li>
+          <li><code>PipelineOptions.MaxDegreeOfParallelism</code> renamed to <code>PipelineOptions.Concurrency</code> for consistency with the new fan-out API</li>
+          <li>Removed deprecated <code>Pipeline.Run()</code> synchronous overload — use <code>await pipeline.RunAsync()</code> instead</li>
+        </ul>
+
+        <pre>// Migration: custom stages
+// Before (3.0)
+public Task ProcessAsync(TIn input, IOutputWriter&lt;TOut&gt; writer) { ... }
+
+// After (3.1)
+public ValueTask ProcessAsync(TIn input, IOutputWriter&lt;TOut&gt; writer) { ... }</pre>
+
+        <h3>🐛 Bug Fixes</h3>
+        <ul>
+          <li>Fixed Parquet decimal precision loss for values with more than 18 significant digits (<span class="mention">@priya_k</span>)</li>
+          <li>Resolved a deadlock when using <code>pipeline.Merge()</code> with two sources that produce at different rates</li>
+        </ul>
+
+        <div class="full-changelog">
+          <strong>Full Changelog:</strong> <a href="#">v3.0.2...v3.1.0</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.releases -->
+
+</body>
+</html>

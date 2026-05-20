@@ -1,0 +1,14 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.rsuser
+
+## WebView2 user data
+WebView2UserDataFolder/
+
+## OS
+Thumbs.db
+.DS_Store
